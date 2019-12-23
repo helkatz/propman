@@ -1,0 +1,48 @@
+<div class="ui-g">
+    <div class="ui-g-4">
+        <p-dropdown
+            (onChange)="onFieldChange($event)" 
+            [(ngModel)]="selectedField" 
+            [options]="fields" 
+            optionLabel="name"
+            placeholder="Choose"
+        ></p-dropdown>
+    </div>
+    <div class="ui-g-4" *ngIf="field">
+        <p-dropdown
+            (onChange)="onOperatorChange($event)" 
+            [(ngModel)]="selectedOperator" 
+            [options]="operators" 
+            placeholder="Choose"
+            optionLabel="name"></p-dropdown>
+
+    </div>
+    <div class="ui-g-4" *ngIf="field">
+        <span *ngIf="field.type=='boolean'">
+            <p-checkbox [(ngModel)]="rule.value"></p-checkbox>
+        </span>
+        <span *ngIf="field.type=='string'">
+            {{console.log("rule", rule)}}
+            <input type="text" pInputText value="rule.value" [(ngModel)]="rule.value">
+        </span>
+        <span *ngIf="field.type=='number'">
+            <!--{{log("rule number", rule)}}-->
+            <input type="text" pInputText [(ngModel)]="rule.value">
+        </span>
+
+        <span *ngIf="field.type=='multiselect'">
+            <!--{{log("rule multiselect", rule)}}-->
+            <p-multiSelect
+                (onChange)="onValuesChange($event)" 
+                [options]="field.options"       
+                optionLabel="name"         
+                [(ngModel)]="selectedValues"
+                [filter] = "false"
+                [showToggleAll] = "false"
+                [showHeader] = "false"
+                placeholder="Select"
+                ></p-multiSelect>
+        </span>
+    </div>
+</div>
+

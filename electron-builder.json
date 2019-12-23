@@ -1,0 +1,54 @@
+{
+	"productName": "propman",
+	"target": [
+		"NSIS"
+	],
+
+	"nsis": {
+		"allowToChangeInstallationDirectory": true,
+		"oneClick": false
+	},  
+    "files": [
+        "**/*",
+        "!**/*.ts",
+        "!*.code-workspace",
+        "!LICENSE.md",
+        "!package.json",
+        "!package-lock.json",
+        "!src/",
+        "!e2e/",
+        "!hooks/",
+        "!angular.json",
+        "!_config.yml",
+        "!karma.conf.js",
+        "!tsconfig.json",
+        "!tslint.json",
+		"build/icon.*"
+    ],
+	"win": {
+		"target": [
+		  {
+			"target": "nsis",
+			"arch": [
+			  "x64",
+			  "ia32"
+			]
+		  }
+		],
+		"publish": [
+			"github"
+		]	
+	},
+	"mac": {
+		"icon": "dist",
+		"target": [
+			"dmg"
+		]
+	},
+	"linux": {
+		"icon": "dist",
+		"target": [
+		  "AppImage"
+		]
+	}
+}

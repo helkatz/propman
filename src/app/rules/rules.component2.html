@@ -1,0 +1,189 @@
+<p-toast position="center" key="c" [modal]="true" [baseZIndex]="5000">
+    <ng-template let-message pTemplate="message">
+        <div style="text-align: center">
+            <i class="pi pi-exclamation-triangle" style="font-size: 3em"></i>
+            <h3>{{message.summary}}</h3>
+            <p>{{message.detail}}</p>
+        </div>
+        <div class="ui-g ui-fluid">
+            <div class="ui-g-6">
+                <button type="button" pButton (click)="onConfirm()" label="Yes" class="ui-button-success"></button>
+            </div>
+            <div class="ui-g-6">
+                <button type="button" pButton label="No" class="ui-button-secondary"></button>
+            </div>
+        </div>
+    </ng-template>
+</p-toast>
+
+<p-toast position="center" key="confirmSave" [modal]="true" [baseZIndex]="5000">
+        <ng-template let-message pTemplate="message">
+            <div style="text-align: left; height: 200px; overflow-y:auto">
+                <span *ngFor="let action of message.data">
+                    <h4>{{action.path}}</h4>
+                </span>
+            </div>
+            <div style="text-align: center">
+                <i class="pi pi-exclamation-triangle" style="font-size: 3em"></i>
+                <h3>{{message.summary}}</h3>
+                <p>{{message.detail}}</p>
+                <p>{{message.data}}</p>
+            </div>
+            <div class="ui-g ui-fluid">
+                <div class="ui-g-6">
+                    <button type="button" pButton (click)="onConfirm()" label="Yes" class="ui-button-success"></button>
+                </div>
+                <div class="ui-g-6">
+                    <button type="button" pButton label="No" class="ui-button-secondary"></button>
+                </div>
+            </div>
+        </ng-template>
+    </p-toast>
+
+<p-toolbar>
+    <div class="ui-toolbar-group-left">
+        <input #gb type="text" pInputText size="25" placeholder="Global Filter" (keyup)="search($event)">
+        <p-toggleButton onLabel="Expand" offLabel="Collapse" [(ngModel)]="collapseAll"></p-toggleButton>
+        <app-environ-chooser #environChooser></app-environ-chooser>
+        <!-- <p-multiSelect [options]="environs" [(ngModel)]="selectedEnvirons"></p-multiSelect> -->
+        <p-button label="Refresh" (onClick)="refresh($event)"></p-button>
+    </div>
+
+    <div class="ui-toolbar-group-right">
+
+        <p-button id="saveChanges" label="Save" (onClick)="saveChanges($event)" style="float: right;"></p-button>
+    </div>
+</p-toolbar>
+<!-- <p-toolbar>
+    <div class="ui-toolbar-group-left">
+        <button pButton type="button" label="New" icon="pi pi-plus"></button>
+        <button pButton type="button" label="Upload" icon="pi pi-upload" class="ui-button-success"></button>
+
+        <i class="ui-toolbar-separator pi pi-bars" style="vertical-align: middle"></i>
+        <app-environ-chooser #environChooser></app-environ-chooser>
+        <p-splitButton label="Save" icon="pi pi-check" [model]="items" styleClass="ui-button-warning"></p-splitButton>
+    </div>
+
+    <div class="ui-toolbar-group-right">
+        <button pButton type="button" icon="pi pi-search"></button>
+        <button pButton type="button" icon="pi pi-calendar" class="ui-button-success"></button>
+        <button pButton type="button" icon="pi pi-times" class="ui-button-danger"></button>
+    </div>
+</p-toolbar> -->
+
+<p-dialog header="Save" [(visible)]="saveDialog.display" [modal]="true"
+    [responsive]="true" [style]="{width: '800px', minWidth: '800px', height: '400px'}" [minY]="400"
+    [maximizable]="true" [baseZIndex]="10000">
+    <p-table [value]="saveDialog.data.values()"
+        autoLayout="false"
+        scrollable="true"
+        scrollHeight="400px">
+        <ng-template pTemplate="header">
+            <tr>
+                <th width="60px">Action</th>
+                <th width="400px">Path</th>
+                <th width="200px">Value</th>
+                <th width="50px">Done</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-action class="ui-table-scrollable-body">
+            <tr>
+                <td width="60px">{{Modification[action.modification]}}</td>
+                <td width="400px" style="overflow:hidden">{{action.environ.name}}:{{action.path}}</td>
+                <td width="200px">{{action.value}}</td>
+                <td width="50px">{{action.done}}</td>
+            </tr>
+        </ng-template>
+    </p-table>
+    <p-footer>
+        <button type="button" pButton icon="pi pi-check" (click)="saveDialog.accept()" label="Yes"></button>
+        <button type="button" pButton icon="pi pi-close" (click)="saveDialog.display=false" label="No" class="ui-button-secondary"></button>
+    </p-footer>
+</p-dialog>
+
+<p-overlayPanel #op [dismissable]="true" [showCloseIcon]="true" >
+    Content
+</p-overlayPanel>
+<!-- <span #tableContainer (window:resize)="onResize($event)"> -->
+<p-treeTable #tableContainer [value]="data" [columns]="cols"
+    [paginator]="false" [rows]="15"
+    [(contextMenuSelection)]="selectedNode"
+    [contextMenu]="cm"
+    (onContextMenuSelect)="openContextMenu($event)"
+    [resizableColumns]="true"
+    [scrollable]="true"
+    scrollHeight="{{scrollHeight}}"
+    [loading]="isLoading"
+    (onEditComplete)="onEditComplete($event)"
+    (onEditCancel)="onEditCancel($event)"
+    (onColResize)="onColResize($event)"
+    (keydown.enter)="onKeyDown($event)"
+
+    >
+    <ng-template pTemplate="colgroup" let-columns>
+        <colgroup>
+            <col *ngFor="let col of columns"
+                [style.width]="col.width"
+            >
+        </colgroup>
+    </ng-template>
+
+    <ng-template pTemplate="header" let-columns>
+        <tr>
+            <th *ngFor="let col of columns"
+                ttResizableColumn>
+                {{col.header}}
+            </th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-rowNode let-rowData="rowData" let-columns="columns">
+            <!-- {{trace("draw")}} -->
+            <!-- {{trace(rowNode)}} -->
+        <tr *ngIf="rowNode.node.visible" [ttContextMenuRow]="rowNode">
+
+            <td *ngFor="let col of columns; let i = index" ttEditableColumn
+                [ngClass]="[
+                    'modification_' + rowNode.node.colInfo(i).modification,
+                    i === 0 ? 'ui-toggler-column' : ''
+                    ]"
+                >
+                <p-treeTableToggler [rowNode]="rowNode" *ngIf="i == 0"></p-treeTableToggler>
+                <!-- <p-treeTableCheckbox [value]="rowNode" *ngIf="i == 0"></p-treeTableCheckbox> -->
+                <p-treeTableCellEditor #e2 *ngIf="i===0 || !rowNode.node.data.dir else noteditable">
+                    <ng-template pTemplate="input">
+                        <!-- {{trace("input" + i)}}-->
+                        {{trace(rowNode.level)}}
+                        <!-- <input pInputText type="text" [(ngModel)]="rowData[col.field]" [ngStyle]="{'width': i == 0 ? '90%': '100%'}"> -->
+                        <!-- <textarea pInputText type="text"
+                            rows={{countLines(rowNode.node.colInfo(i).value)}}
+                            [(ngModel)]="rowNode.node.colInfo(i).value"
+                            [ngStyle]="{'width': i == 0 ? '90%': '100%'}">
+                            </textarea> -->
+                        <div #editDiv tabindex="0" pInputText style="white-space: pre-wrap !important" contenteditable
+                            (keydown.enter)="onKeyDown($event)"
+                            (keyup)="modifyNode(rowNode.node, i)"
+                            (blur)="onEditComplete($event, rowNode.node, i)"
+                            >{{rowNode.node.colInfo(i).value}}</div>
+                        <!-- <ng-template #noteditable>
+                            <span style="white-space: pre-wrap !important">{{rowNode.node.colInfo(i).value}}</span>
+                        </ng-template> -->
+
+
+                    </ng-template>
+                    <!-- <ng-template #noteditable>{{rowNode.node.colInfo(i).value}}</ng-template> -->
+                    <ng-template pTemplate="output">
+                        <!-- {{trace("output" + i + " " + rowNode.node.data.name)}} -->
+                        <!--{{trace(rowNode.node)}} -->
+                        <!-- <span pTooltip="{{rowNode.node.colInfo(i).value}}"> -->
+                        <span style="white-space: pre-wrap !important">{{rowNode.node.colInfo(i).value}}</span>
+                    </ng-template>
+                </p-treeTableCellEditor>
+                <ng-template #noteditable>
+                    {{rowNode.node.colInfo(i).value}}
+                </ng-template>
+            </td>
+        </tr>
+    </ng-template>
+</p-treeTable>
+<!-- </span> -->
+<p-contextMenu #cm [model]="contextMenuItems"></p-contextMenu>

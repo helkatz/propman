@@ -1,0 +1,40 @@
+<app-dlg-addrule #addRuleDialog></app-dlg-addrule>
+<!--<p-dialog #addRuleDialog>
+    <p-header>
+        Add a new rule
+    </p-header>
+    <div class="ui-g ui-fluid" style="height:400px; overflow-y: auto">
+        <div class="xui-float-label ui-g-12">
+            <label for="float-input">Name</label>
+            <input pInputText id="float-input" type="text" size="30" pInputText
+                [(ngModel)]="addRuleDialog.data.name">
+        </div>    
+    </div>
+    <p-footer>
+        <button pButton type="button" label="Add" (click)="addRuleDialog_Click_Add($event)"></button>
+        <button pButton type="button" label="Cancel" (click)="addRuleDialog_Click_Cancel($event)"></button>
+    </p-footer>    
+</p-dialog>-->
+<p-tree #rulesTree [value]="rules" 
+    [(selection)]="selectedRules"
+    [contextMenu]="rulesContextMenu"
+    selectionMode="multiple"
+    [style]="{width: '100%'}"
+    [styleClass]="tree-key"
+    (onNodeSelect)="onNodeSelect($event)"
+    (onNodeContextMenuSelect)="openContextMenu($event)">
+</p-tree>
+
+<!--
+<p-tree [value]="rulesTree" [contextMenu]="rulesContextMenu"
+    selectionMode="single"
+    (onNodeSelect)="onNodeSelect($event)"
+    (onNodeContextMenuSelect)="openContextMenu($event)">
+    <ng-template let-node  pTemplate="default">
+        <app-input [el]="node.label"></app-input>
+    </ng-template>    
+</p-tree>
+-->
+<p-contextMenu #rulesContextMenu 
+    [model]="contextMenuItems"></p-contextMenu>
+

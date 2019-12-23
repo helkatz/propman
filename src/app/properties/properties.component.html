@@ -1,0 +1,22 @@
+ 
+ <div>
+ <p-tree 
+    [value]="properties" 
+    [(selection)]="selectedProperties"
+    [contextMenu]="propertiesContextMenu"
+    selectionMode="single"
+    [style]="{width: '100%', height:'400px'}"
+    (onNodeSelect)="onNodeSelect($event)"
+    (onNodeContextMenuSelect)="openContextMenu($event)">
+    <ng-template let-node  pTemplate="default">
+        <ng-container *ngIf="node.data">
+            <p-checkbox *ngIf="applyable" (onChange)="clickAppliedChange(node.data)" [(ngModel)]="node.data.applied" binary="true"></p-checkbox>
+            {{node.label}}
+        </ng-container>
+        <ng-container *ngIf="!node.data">
+            {{node.label}}
+        </ng-container>        
+    </ng-template>
+</p-tree>
+
+</div>

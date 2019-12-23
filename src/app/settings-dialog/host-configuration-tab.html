@@ -1,0 +1,36 @@
+<div class="ui-g ui-fluid" style="height:400px; overflow-y: auto">
+
+    <span class="ui-g-6">
+        <p-dropdown class="ui-g-12" (onChange)="onEnvironChange($event)" [(ngModel)]="selectedEnviron" [options]="environs" optionLabel="name"></p-dropdown>
+
+    <div class="xui-float-label ui-g-12">
+        <label for="float-input">Name</label>
+        <input pInputText id="float-input" type="text" size="30" pInputText
+            [(ngModel)]="editEnviron.name">
+    </div>
+    <div class="xui-float-label ui-g-12">
+        <label for="float-input">Host</label>
+        <input id="float-input" type="text" size="30" pInputText [(ngModel)]="editEnviron.host">
+    </div>
+    <div class="xui-float-label ui-g-12">
+        <label for="float-input">Path</label>
+        <input id="float-input" type="text" size="30" pInputText [(ngModel)]="editEnviron.query">
+    </div>
+    <div class="xui-float-label ui-g-12">
+        <label for="float-input">Username</label>
+        <input id="float-input" type="text" size="30" pInputText [(ngModel)]="editEnviron.user">
+    </div>
+    <div class="xui-float-label ui-g-12">
+        <label for="float-input">Password</label>
+        <input id="float-input" type="password" size="30" pInputText [(ngModel)]="editEnviron.pass">
+    </div>
+    </span>
+    <span class="ui-g-6">
+        <div class="ui-g-12"><p-checkbox name="group1" label="Default" binary="true" [(ngModel)]="editEnviron.default"></p-checkbox></div>
+        <div class="ui-g-12"><p-checkbox name="group1" label="Writeable" binary="true" [(ngModel)]="editEnviron.writeable"></p-checkbox></div>
+    </span>
+</div>
+    <p-button label="Add" [disabled]="checkButtonState('add')" (onClick)="addHost()"></p-button>
+    <p-button label="Save" [disabled]="checkButtonState('save')" (onClick)="saveHost()"></p-button>
+    <p-button label="Remove" [disabled]="checkButtonState('remove')" (onClick)="removeHost()"></p-button>
+

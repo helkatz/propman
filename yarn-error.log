@@ -1,0 +1,146 @@
+Arguments: 
+  C:\Program Files\nodejs\node.exe C:\Program Files (x86)\Yarn\bin\yarn.js publish
+
+PATH: 
+  C:\Programme\cmder\1.3.6\bin;C:\Programme\cmder\1.3.6\vendor\conemu-maximus5\ConEmu\Scripts;C:\Programme\cmder\1.3.6\vendor\conemu-maximus5;C:\Programme\cmder\1.3.6\vendor\conemu-maximus5\ConEmu;C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\XXProgram Files (x86)\Common Files\Oracle\Java\javapath;C:\windows\system32;C:\windows;C:\windows\System32\Wbem;C:\windows\System32\WindowsPowerShell\v1.0\;C:\Program Files\Git\cmd;C:\Program Files (x86)\PuTTY\;C:\Program Files (x86)\Common Files\Acronis\SnapAPI\;C:\Program Files (x86)\Acronis\CommandLineTool\;C:\Program Files (x86)\WinMerge;c:\builds\common;C:\Program Files\Prio;C:\Program Files\nodejs\;C:\Program Files (x86)\Yarn\bin\;C:\Program Files\TortoiseGit\bin;C:\Programme\apache-maven-3.6.0\bin;C:\Program Files\Java\jdk-11.0.1\bin;C:\Users\h.katz\AppData\Local\Programs\Python\Python37\Scripts\;C:\Users\h.katz\AppData\Local\Programs\Python\Python37\;C:\Program Files\Conan\conan;C:\Users\h.katz\AppData\Local\Microsoft\WindowsApps;C:\Users\h.katz\AppData\Local\Programs\Microsoft VS Code\bin;C:\Program Files\CMake\bin;C:\Program Files\KDiff3;\Program Files\Redis;C:\xampp\php;C:\Users\h.katz\AppData\Roaming\npm;C:\Users\h.katz\AppData\Local\Yarn\bin;C:\Users\h.katz\AppData\Local\atom\bin;c:\data\misc\configs;C:\Program Files\Git\mingw64;C:\Program Files\Git\usr\bin;C:\Programme\cmder\1.3.6
+
+Yarn version: 
+  1.9.4
+
+Node version: 
+  8.11.4
+
+Platform: 
+  win32 x64
+
+Trace: 
+  Error: canceled
+      at Interface.<anonymous> (C:\Program Files (x86)\Yarn\lib\cli.js:126002:13)
+      at emitNone (events.js:106:13)
+      at Interface.emit (events.js:208:7)
+      at Interface._ttyWrite (readline.js:774:16)
+      at ReadStream.onkeypress (readline.js:158:10)
+      at emitTwo (events.js:126:13)
+      at ReadStream.emit (events.js:214:7)
+      at emitKeys (internal/readline.js:420:14)
+      at emitKeys.next (<anonymous>)
+      at ReadStream.onData (readline.js:1010:36)
+
+npm manifest: 
+  {
+    "name": "etcdman",
+    "version": "1.0.0",
+    "description": "etcd editor",
+    "homepage": "https://github.com/helkatz/etcdman",
+    "author": {
+      "name": "Helmut Katz",
+      "email": "hkatz.develop@gmail.com"
+    },
+    "keywords": [
+      "angular",
+      "angular 7",
+      "electron",
+      "typescript",
+      "sass"
+    ],
+    "main": "main.js",
+    "private": false,
+      "build": {
+          "appId": "your.id",
+          "win": {
+              "publish": ["github"]
+          }, 
+          "publish": [{
+              "provider": "github",
+              "owner": "helkatz",
+              "repo": "etcdman"
+          }]
+      },
+    "scripts": {
+      "postinstall": "npm run postinstall:electron && electron-builder install-app-deps",
+      "postinstall:web": "node postinstall-web",
+      "postinstall:electron": "node postinstall",
+      "ng": "ng",
+      "start": "npm run postinstall:electron && npm-run-all -p ng:serve electron:serve",
+      "build": "npm run postinstall:electron && npm run electron:serve-tsc && ng build",
+      "build:dev": "npm run build -- -c dev",
+      "build:prod": "npm run build -- -c production",
+      "ng:serve": "ng serve",
+      "ng:serve:web": "npm run postinstall:web && ng serve -o",
+      "electron:serve-tsc": "tsc -p tsconfig-serve.json",
+      "electron:serve": "wait-on http-get://localhost:4200/ && npm run electron:serve-tsc && electron . --serve",
+      "electron:local": "npm run build:prod && electron .",
+      "electron:linux": "npm run build:prod && electron-builder build --linux",
+      "electron:windows": "npm run build:prod && electron-builder build --windows",
+      "electron:mac": "npm run build:prod && electron-builder build --mac",
+      "test": "npm run postinstall:web && ng test",
+      "e2e": "npm run postinstall:web && ng e2e",
+      "version": "conventional-changelog -i CHANGELOG.md -s -r 0 && git add CHANGELOG.md",
+      "publish": "npm run build --windows -p always",
+      "pack": "electron-builder --dir",
+      "dist": "electron-builder"    ,
+      "publish": "electron-builder --publish always"
+    },
+    "dependencies": {
+  
+    },
+    "devDependencies": {
+      "@angular/animations": "^7.1.4",
+      "@angular/cdk": "^7.2.0",
+      "@angular/flex-layout": "^7.0.0-beta.23",
+      "@angular/material": "^7.2.1",
+      "bootstrap": "^4.2.1",
+      "core.js": "^0.4.2",
+      "jquery": "^3.3.1",
+      "jsonpath": "^1.0.0",
+      "popper.js": "^1.14.6",
+      "primeicons": "^1.0.0",
+      "primeng": "^7.0.3",
+      "update-electron-app": "^1.3.0",      
+      "@angular-devkit/build-angular": "~0.12.2",
+      "@angular/cli": "7.2.2",
+      "@angular/common": "7.2.1",
+      "@angular/compiler": "7.2.1",
+      "@angular/compiler-cli": "7.2.1",
+      "@angular/core": "7.2.1",
+      "@angular/forms": "7.2.1",
+      "@angular/http": "7.2.1",
+      "@angular/language-service": "7.2.1",
+      "@angular/platform-browser": "7.2.1",
+      "@angular/platform-browser-dynamic": "7.2.1",
+      "@angular/router": "7.2.1",
+      "@ngx-translate/core": "11.0.1",
+      "@ngx-translate/http-loader": "4.0.0",
+      "@types/jasmine": "3.3.7",
+      "@types/jasminewd2": "2.0.6",
+      "@types/node": "10.12.18",
+      "codelyzer": "4.5.0",
+      "conventional-changelog-cli": "2.0.11",
+      "core-js": "^2.6.2",
+      "electron": "4.0.1",
+      "electron-builder": "20.38.5",
+      "electron-reload": "1.4.0",
+      "jasmine-core": "3.3.0",
+      "jasmine-spec-reporter": "4.2.1",
+      "karma": "3.1.4",
+      "karma-chrome-launcher": "2.2.0",
+      "karma-coverage-istanbul-reporter": "2.0.4",
+      "karma-jasmine": "2.0.1",
+      "karma-jasmine-html-reporter": "1.4.0",
+      "npm-run-all": "4.1.5",
+      "protractor": "5.4.2",
+      "rxjs": "6.3.3",
+      "ts-node": "7.0.1",
+      "tslint": "5.12.1",
+      "typescript": "3.2.4",
+      "wait-on": "3.2.0",
+      "webdriver-manager": "12.1.1",
+      "zone.js": "0.8.28"
+    }
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile

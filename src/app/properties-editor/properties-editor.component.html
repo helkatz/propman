@@ -1,0 +1,64 @@
+<p-treeTable [value]="treeNodes" [columns]="cols">
+    <ng-template pTemplate="header" let-columns>
+        <tr>
+            <th *ngFor="let col of columns"
+                ttResizableColumn>
+                {{col.header}}
+            </th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-rowNode let-rowData="rowData">
+        <tr>
+            <td *ngFor="let col of cols; let i = index" pTooltip={{rowData.meta.description}} 
+                tooltipPosition="top">
+                <p-treeTableToggler [rowNode]="rowNode" *ngIf="i == 0"></p-treeTableToggler>
+                <span *ngIf="i !== 0" class="ui-grid ui-grid-responsive ui-fluid"> 
+                    <div class="ui-grid-row">                   
+                        <span *ngIf="rowData.meta.componentType=='boolean'" class="ui-grid-col-12">
+                            <p-checkbox styleClass="component" [(ngModel)]="rowData.value" binary="true"
+                                (onChange)="onVarValueChanged(rowData)"></p-checkbox>
+                        </span>
+                        <div *ngIf="rowData.meta.componentType=='string'" class="ui-grid-col-12">
+                            <input type="text" class="component" pInputText value="rowData.value" 
+                                [(ngModel)]="rowData.value" (input)="onVarValueChanged(rowData)">
+                        </div>
+                        <span *ngIf="rowData.meta.componentType=='number'" class="ui-grid-col-12">
+                            <input type="text" class="component" pInputText [(ngModel)]="rowData.value" (input)="onVarValueChanged(rowData)">
+                        </span>
+                        <span *ngIf="rowData.meta.componentType=='select'" class="ui-grid-col-12">
+                            <p-dropdown
+                                (onChange)="onDropdownValuesChange(rowData)" 
+                                [(ngModel)]="rowData.selectedOptions" 
+                                [options]="rowData.meta.options" 
+                                placeholder="Choose"
+                                optionLabel="name"
+                            >
+                            </p-dropdown>
+                        </span>
+                        <span *ngIf="rowData.meta.componentType=='multiselect'" class="ui-grid-col-12">
+                            <!--{{log("rule multiselect", rule)}}-->
+                            <p-multiSelect
+                                (onChange)="onMultiSelectValuesChange(rowData)" 
+                                [options]="rowData.meta.options"       
+                                optionLabel="name"    
+                                [(ngModel)]="rowData.selectedOptions"
+                                [filter] = "false"
+                                [showToggleAll] = "false"
+                                [showHeader] = "false"
+                                placeholder="Select"
+                                ></p-multiSelect>
+                        </span>
+                    </div>
+                </span>
+                <span *ngIf="i == 0">
+                    <span 
+                        [ngClass]="[
+                            rowData.isOverride ? 'override' : ''
+                        ]">
+                        {{rowData.name}}
+                    </span>
+                </span>
+            </td>
+        </tr>
+    </ng-template>
+</p-treeTable>

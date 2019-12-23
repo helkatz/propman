@@ -1,0 +1,51 @@
+appId: com.hk-develop.propman
+directories:
+  output: release/
+  buildResources: build
+productName: propman
+buildDependenciesFromSource: true
+# compression: store
+asar: true
+publish:
+  - provider: github
+    owner: helkatz
+    repo: propman
+
+target: NSIS
+nsis:
+  allowToChangeInstallationDirectory: true
+  oneClick: false
+files:
+  - filter:
+      - '**/*'
+      - '!**/*.ts'
+      - '!*.code-workspace'
+      - '!LICENSE.md'
+      - '!package.json'
+      - '!package-lock.json'
+      - '!src/'
+      - '!e2e/'
+      - '!hooks/'
+      - '!angular.json'
+      - '!_config.yml'
+      - '!karma.conf.js'
+      - '!tsconfig.json'
+      - '!tslint.json'
+      - '!propman.json'
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+        #- ia32
+  publish:
+    - github
+mac:
+  icon: dist
+  target:
+    - dmg
+linux:
+  icon: dist
+  target:
+    - AppImage
+electronVersion: 4.0.1

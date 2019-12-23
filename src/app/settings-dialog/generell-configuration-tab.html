@@ -1,0 +1,9 @@
+<div class="ui-g ui-fluid" style="height:400px; overflow-y: auto">
+
+    <span class="ui-g-6">
+        <div class="xui-float-label ui-g-12">
+            <label>Theme</label>
+            <p-dropdown (onChange)="changeTheme($event)" [(ngModel)]="selectedTheme" [options]="themes" optionLabel="value"></p-dropdown>
+        </div>
+    </span>
+</div>

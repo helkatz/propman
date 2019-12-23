@@ -1,0 +1,14 @@
+<div class="ruleset">
+    <button pButton *ngIf="ruleSet.condition=='and'" type="button" label="And" (click)="onChangeCondition($event)"></button>
+    <button pButton *ngIf="ruleSet.condition=='or'" type="button" label="Or" (click)="onChangeCondition($event)"></button>
+
+    <button pButton type="button" label="Add Rule" (click)="onAddRule($event)"></button>
+    <button pButton type="button" label="Add Ruleset" (click)="onAddRuleset($event)"></button>
+
+    <div *ngFor="let rule of ruleSet.rules">
+        <query-builder-rule *ngIf="!rule.rules" [rule]="rule" [queryBuilder]="queryBuilder"></query-builder-rule>
+        <div *ngIf="rule.rules" class="nested">
+            <query-builder-ruleset [ruleSet]="rule" [queryBuilder]="queryBuilder"></query-builder-ruleset>
+        </div>
+    </div>
+</div>

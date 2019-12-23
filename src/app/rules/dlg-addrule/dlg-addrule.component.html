@@ -1,0 +1,26 @@
+<p-dialog [(visible)]="display">
+    <p-header>
+        Add a new rule
+    </p-header>
+    <div class="ui-g ui-fluid" style="height:300px; width: 400px; overflow-y: auto">
+        <div class="xui-float-label ui-g-12">
+            <label for="float-input">Name</label>
+            <input pInputText id="float-input" type="text" size="30" pInputText
+                [(ngModel)]="params.groupName">
+        </div>  
+        <div class="xui-float-label ui-g-12">
+            <label for="float-input">Description</label>
+            <input pInputText id="float-input" type="text" size="100" pInputText
+                [(ngModel)]="params.description">
+        </div>  
+
+        <span class="ui-g-6">
+            <div class="ui-g-12"><p-checkbox name="group1" label="InheritFromParent" 
+                binary="true" [(ngModel)]="params.inheritFromParent"></p-checkbox></div>
+        </span>          
+    </div>
+    <p-footer>
+        <button pButton type="button" label="Add" (click)="accept(params)"></button>
+        <button pButton type="button" label="Cancel" (click)="cancel()"></button>
+    </p-footer>    
+</p-dialog>

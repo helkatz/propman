@@ -1,0 +1,16 @@
+<!-- <p-dialog header="Settings" [visible]="display" [modal]="true" [responsive]="false" 
+    [style]="{width: '350px', minWidth: '200px', xheight:'300px'}" [minY]="200"
+    [maximizable]="true" [baseZIndex]="10000"> -->
+    <p-tabView>
+        <p-tabPanel header="Hosts">
+            <ng-template pTemplate="content">
+            <host-configuration-tab></host-configuration-tab>    
+            </ng-template>
+        </p-tabPanel>
+        <p-tabPanel header="Generell">
+            <ng-template pTemplate="content">
+            <generell-configuration-tab></generell-configuration-tab>
+            </ng-template>
+        </p-tabPanel>
+    </p-tabView>
+<!-- </p-dialog> -->

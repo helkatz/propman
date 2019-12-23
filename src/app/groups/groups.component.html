@@ -1,0 +1,11 @@
+<p-tree 
+    [value]="groups" 
+    [(selection)]="selectedGroups"
+    [contextMenu]="rulesContextMenu"
+    selectionMode="multiple"
+    [style]="{width: '100%', height:'200px'}"
+    [styleClass]="tree-key"
+    (onNodeSelect)="onNodeSelect($event)"
+    (onNodeContextMenuSelect)="openContextMenu($event)">
+</p-tree>    
+

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Property, PropertiesService } from '../services/properties.service';
+import { Property, PropertiesService, Modification, Modifyable } from '../services/properties.service';
 import * as prime from 'primeng/api';
 import { Database } from '../lib/database';
 import { ValueTransformer } from '@angular/compiler/src/util';
@@ -7,11 +7,13 @@ import { Entity } from 'angular2-query-builder/dist/components';
 import { TouchBarSegmentedControlConstructorOptions } from 'electron';
 import * as lodash from 'lodash'
 import * as difflib from 'deep-object-diff';
+import { Mode } from '../properties/properties.component';
+import { take } from 'rxjs/operators';
 // the real type of the value 
-type ValueType = "boolean" | "number" | "double" | "string" | "period" | "object" | "array"
+type AttributeType = "boolean" | "number" | "double" | "string" | "period" | "object" | "array"
 
 // the type for the component to edit an value
-type ComponentType = ValueType | "select" | "multiselect"
+type ComponentType = AttributeType | "select" | "multiselect" | "tree" | "multiselect-cupalabs"
 
 type Grants = "ro" | "rw" | "none"
 enum Role {
@@ -26,40 +28,56 @@ export interface xRole {
 export interface Option {
   name: string
   value: string | number
+  category?: string
 }
 
-export interface ValueMeta {
+export interface AttributeMeta {
+  entity?: string
   name?: string
-  type: ValueType
+  type: AttributeType
   componentType?: ComponentType
+  showFilter?: boolean
   description?: string
   defaultValue?: any
   options?: Option[]
+  cuppalabs?: ControlMultiselectCuppalabs[]
   role?: Role
+  min?: number
+  max?: number
+  settings?: any
+  children?: AttributeMetaMap
 }
 
-export interface ValueMetaMap {
-  [key: string]: ValueMeta
+export interface AttributeMetaMap {
+  [key: string]: AttributeMeta
 }
 
 export interface TypeEntity {
-  valueMeta: ValueMetaMap
+  valueMeta: AttributeMetaMap
 }
 export interface TypeEntityMap {
-  [key: string]: ValueMetaMap
+  [key: string]: AttributeMetaMap
 }
 
-export interface Value {
-  meta: ValueMeta
+export interface ControlMultiselectCuppalabs {
+  options: {
+    itemName: string
+    id: any
+  }[]
+}
+export interface Attribute {
+  meta: AttributeMeta
+  property: Property
   value: any
+  path: string
 }
 
 interface TreeNodeData {
   name: string
   path: string
-  meta: ValueMeta
+  meta: AttributeMeta
   value: any
-  isOverride: boolean
+  overidedBy: string[]
   property: Property
   selectedOptions?: Option[] | any
 }
@@ -78,249 +96,305 @@ interface TreeNode {
 })
 
 export class PropertiesEditorComponent implements OnInit {
+  
+  editMode: Mode
+  // is bound to property.value or ruleValue or userValue
+  targetAttributes: Modifyable<object>
+  // holds the currently loaded property
+  property: Property
+  // holds overrided objects eq. when a ruleValue overrides the propValue
+  overrides: Map<object, {source:object, key:string}[]> = new Map
+
   role = Role.User
-  tt = "hallo"
+
   cols: any[] = [
     { field: "name", header: "Name"},
     { field: "value", header: "Value"}
   ]
+
   treeNodes: TreeNode[]
 
-  myvalue = true
-  values: Value[]
+  // attributes: Attribute[]
   typeEntities: TypeEntityMap
-
+  // unchangedProperty: Property
 
   constructor(private propertiesService: PropertiesService) { }
   
-  log(msg: any) {
+  log(...msg: any[]) {
     console.log(msg)
   }
 
+  setOveridedBy(data: TreeNodeData) {
+    const orb = this.editMode === "rulebased" ? "R" : this.editMode == "userbased" ? "U" : undefined
+    if(orb)
+      data.overidedBy = [orb]    
+  }
+
   onVarValueChanged(data: TreeNodeData) {
-    lodash.set(data.property.additional, data.path, data.value)
+    lodash.set(this.targetAttributes.get(), data.path, data.value)
+    data.property.modification = Modification.Changed
+    this.setOveridedBy(data)
     console.log(data)
   }
 
   onMultiSelectValuesChange(data: TreeNodeData) {
     data.value = data.selectedOptions.map(o => o.value)
-    lodash.set(data.property.additional, data.path, data.value)
-    console.log("data", [...data.value], data)
+    lodash.set(this.targetAttributes.get(), data.path, data.value)
+    data.property.modification = Modification.Changed
+    console.log("onMultiSelectValuesChange", [...data.value], data)
     if(data.name === "extends") {
-      
-      // data.value.forEach(id => {
-      //   const prop = this.propertiesService.getPropertyById(id)
-      //   if(!data.property.extends.find(p => p.id === prop.id)) {
-      //     console.log("apply extends", prop)
-      //     data.property.extends.push(prop)
-      //   }
-      // })      
-      this.load(data.property)
+      this.load(data.property, this.editMode)
     }
-    // this.load(data.property)
-    console.log("data", data)
+    this.setOveridedBy(data)
   }
 
   onDropdownValuesChange(data: TreeNodeData) {
     data.value = data.selectedOptions.value
-    lodash.set(data.property.additional, data.path, data.value)
+    lodash.set(this.targetAttributes.get(), data.path, data.value)
+    data.property.modification = Modification.Changed
+    this.setOveridedBy(data)
     console.log(data)
   }
 
-
-  load(property: Property) {
-    const treeNodes: TreeNode[] = []
-    console.log("edit property", property, this.typeEntities)
-
-    const treeNodeMap: Map<string, TreeNode> = new Map
-    let values: Value[] = []
-    const overrides: Map<object, string[]> = new Map
+  getAttributeMetaInfo(values: any[], varName: string, parent: Attribute) {
+    const entity = values['entity'];
+    console.log(`getAttributeMetaInfo entity: ${entity}, name: ${varName}, parent:`, parent)
     
-    const findTypeInfo = (values: any[], varName: string) => {
-      const entity = values['entity'];
-      // console.log("entity", entity, this.typeEntities)
-      
-      const searchEntities: ValueMetaMap[] = []
-      if(entity && this.typeEntities[entity])
-        searchEntities.push(this.typeEntities[entity])
+    const searchEntities: string[] = []
 
-      searchEntities.push(this.typeEntities['default'])
-
-      Object.keys(this.typeEntities).forEach(key => {
-        if(key !== entity && key !== 'default') {
-          searchEntities.push(this.typeEntities[key])
-        }
-      })
-
-      const valueMetaMap = searchEntities.find(e => e[varName] !== undefined) || {}
-      let valueMeta = valueMetaMap[varName]
-
-      const value = values[varName]
-
-      if(!valueMeta)
-        valueMeta = { 
-          type: value instanceof Object ? 'object' : 'string' 
-        }
-      if(!valueMeta.componentType)
-        valueMeta.componentType = valueMeta.type
-      if(!valueMeta.name)
-        valueMeta.name = varName
-      if(valueMeta.role === undefined)
-        valueMeta.role = Role.User      
-      return lodash.cloneDeep(valueMeta)
+    if(parent && parent.meta.children && parent.meta.children.hasOwnProperty(varName)) {
+      const childEntity = parent.meta.children[varName]
+      console.log("childEntoty found", childEntity)
     }
+    if(entity && this.typeEntities[entity])
+      searchEntities.push(entity)
 
-    const buildValuesEditor = (treeNodes: TreeNode[], values: any, parent: string) => {
-      const isOverride = (varName: string) =>{
-        const obj = overrides.get(values)
-        return obj && obj.find(name => name === varName) !== undefined
+    searchEntities.push('default')
+
+    Object.keys(this.typeEntities).forEach(key => {
+      if(key !== entity && key !== 'default') {
+        searchEntities.push(key)
       }
-      Object.keys(values).forEach(key => {
-        // console.log("isOverride", isOverride(key))
-        const value = values[key]
-        const path = parent ? parent + "." + key : key
-        let valueMeta = findTypeInfo(values, key) //typeEntity[key] || this.typeEntities['default'][key]
+    })
+    const takenEntity = searchEntities.find(e => this.typeEntities[e][varName] !== undefined) || ""
+    
+    const valueMetaMap = this.typeEntities[takenEntity] || {}
+    let valueMeta = valueMetaMap[varName]
+    console.log("takeEntity", takenEntity, "valueMetaMap", valueMetaMap, "valueMeta", valueMeta)
+    const value = values[varName]
 
-        let selectedOptions: Option[] | any
-        if(valueMeta.componentType === "multiselect" || valueMeta.componentType === "select") {
-          
-          // when field is extends then remove the curretn prop from options to avoid recursion
-          if(key === "extends") {
-            const removeIndex = valueMeta.options.findIndex(o => o.value == property.id)
-            valueMeta.options.splice(removeIndex, 1)
-          }
-          valueMeta.options.forEach(o => {
-            if(valueMeta.componentType === "select") {
-              if(o.value == value)
-                selectedOptions = o
-            } else {
-              // if(key == "extends")
-              //   console.log("extends", value, o)
-              selectedOptions = []
-              value.find((v) => {
-                
-                if(v == o.value) {
-                  console.log("selectedOptions.push", v, o)
-                  selectedOptions.push(o)
-                }
-              })
-            }
-          })
-          console.log("selectedOptions", key, value, selectedOptions)
-        }
+    if(!valueMeta)
+      valueMeta = {
+        name: varName,
+        type: value instanceof Object ? 'object' : 'string' 
+      }
+    if(!valueMeta.componentType)
+      valueMeta.componentType = valueMeta.type
+    if(!valueMeta.name)
+      valueMeta.name = varName
+    if(valueMeta.role === undefined)
+      valueMeta.role = Role.User   
+    valueMeta.entity = takenEntity   
+    return lodash.cloneDeep(valueMeta)
+  }
 
-        
-        let treeNode = treeNodeMap.get(path)
-        if(treeNode) {
-          // treeNode.data.
-        }
-        else {
-          treeNode = {
-            label: key,
-            data: {
-              name: key,
-              path,
-              meta: valueMeta,
-              value: value,
-              isOverride: isOverride(key),
-              property: property,
-              selectedOptions
-            }
-          }
-          if(valueMeta.role >= this.role) {
-            treeNodes.push(treeNode)
-          }            
-        }
+  getSelectedOptions(attr: Attribute) {
 
+    if(attr.meta.componentType === "select") {
+      return attr.meta.options.find(option => option.value == attr.value)
+    }
 
+    if(attr.meta.componentType === "multiselect") {
+      
+      // when field is extends then remove the curretn prop from options to avoid recursion
+      if(attr.meta.name === "extends") {
+        const removeIndex = attr.meta.options.findIndex(o => o.value == attr.property.id)
+        attr.meta.options.splice(removeIndex, 1)
+      }
 
-        if(valueMeta.type === "object") {
-          treeNode.data.meta.componentType = "object"
-          treeNode.children = []
-          buildValuesEditor(treeNode.children, value, path)
-        }
+      const selectedOptions = []
+      attr.meta.options.forEach(option => {
+        if(attr.value.find(v => v == option.value))
+          selectedOptions.push(option)
+      })
+      return selectedOptions
+      // console.log("selectedOptions", key, value, selectedOptions)
+    }    
+  }
+  
+  buildAttributesEditor = (treeNodes: TreeNode[], attributes: any, parent: Attribute) => {
+
+    const overidedBy = (varName: string): string[] => {
+      const obj = this.overrides.get(attributes)
+      if(!obj)
+        return undefined
+
+      const foundOverride = obj.filter(o => o.key === varName)
+      return foundOverride.map(found => {
+        let changedBy: string = 
+          found.source == this.property.overrides.ruleValue.get() ? "R" :
+          found.source == this.property.overrides.userValue.get() ? "U" : undefined
+          // console.log("overidedBy", varName, foundOverride, this.property, obj)
+        return changedBy
       })
     }
+
     
-    // install internals those are alos additionals but reserved
-    const internals = {
-      // entity: 'internal',
-      extends: []
-    }
-    
-    const mergeCallbackWithDiffDetection = (objValue, srcValue, key, obj, src) => {
+    Object.keys(attributes).forEach(key => {
+      const path = parent ? parent + "." + key : key
+      const attr: Attribute = {
+        meta: this.getAttributeMetaInfo(attributes, key, parent),
+        value: attributes[key],
+        property: this.property,
+        path: path
+      }
+
+      const treeNode: TreeNode = {
+        label: key,
+        data: {
+          name: key,
+          path: attr.path,
+          meta: attr.meta,
+          value: attr.value,
+          overidedBy: overidedBy(key),
+          property: this.property,
+          selectedOptions: this.getSelectedOptions(attr)
+        }
+      }
+
+      if(attr.meta.role >= this.role) {
+        treeNodes.push(treeNode)
+      }            
+      console.log("attribute", attr)
+      if(attr.meta.type === "object") {
+        treeNode.data.meta.componentType = "object"
+        treeNode.children = []
+        this.buildAttributesEditor(treeNode.children, attr.value, attr)
+      }
+    })
+  }
+
+  load(property: Property, mode: Mode) {
+    this.editMode = mode
+    if(mode === "userbased")
+      this.targetAttributes = property.overrides.userValue
+    else if(mode == "rulebased")
+      this.targetAttributes = property.overrides.ruleValue
+    else
+      this.targetAttributes = property.propValue
+    this.property = property
+    this.overrides = new Map
+
+    const treeNodes: TreeNode[] = []
+    console.log("edit property", mode, property, this.typeEntities)
+
+    // this fillsup the overrides map to determine which attribute is overided
+    const mergeCallbackWithDiffDetection = (objValue, srcValue, key: string, obj, src) => {
       // check override src would be merged into obj when obj is undefined then
       // this will not marked as overide
-      const diff = difflib.detailedDiff(objValue, srcValue)
       if(objValue !== undefined) {
-        const orObj = overrides.get(obj)
+        const orObj = this.overrides.get(obj)
         if(orObj) {
-          orObj.push(key)
+          orObj.push({key, source: src})
         } else
-          overrides.set(obj, [key])
-        console.log(`diff ${key} ${objValue} => ${srcValue}`, obj, src, src[key] === obj[key])
+          this.overrides.set(obj, [{key, source: srcValue}])
       }
       return mergeCallback(objValue, srcValue)
     }
-    const mergeCallback = (objValue, srcValue) => {
 
+    const mergeCallback = (objValue, srcValue) => {
       if (lodash.isArray(objValue)) {
         return srcValue;
       }
     }
 
     const mergeExtends = (merged: any, from: number[]) => {
+      // console.log("mergeExtends")
       from.forEach(id => {        
         const extends_prop = this.propertiesService.getPropertyById(id)
         console.log("mergeExtends", id, extends_prop)
         const node = {}
-        node[extends_prop.name] = extends_prop.additional
-         
-        mergeExtends(node[extends_prop.name], extends_prop.additional['extends'])
-
-        // extends should not be in merged save it and add it later again
-        const saveExtends = extends_prop.additional['extends']
-        delete extends_prop.additional['extends']
+        node[extends_prop.name] = lodash.cloneDeep(extends_prop.propValue.get())
+        if(node[extends_prop.name]['extends'] !== undefined) {
+          mergeExtends(node[extends_prop.name], node[extends_prop.name]['extends'])
+          delete node[extends_prop.name]['extends']
+        }
+     
         lodash.mergeWith(merged, node, mergeCallback)
-        extends_prop.additional['extends'] = saveExtends
       })
     }
 
+    // install internal attributes 
+    const internals = {
+      extends: []
+    }
+    
     const merged = {}
-    // fill merged first with extends then internalsand last from property
+
+    // fill merged first with extends then internals and last from property
     console.log("merge internals") 
     lodash.mergeWith(merged, internals, mergeCallbackWithDiffDetection)
- 
-    mergeExtends(merged, property.additional['extends'])
-    console.log("merge property.additional") 
-    lodash.mergeWith(merged, property.additional, mergeCallbackWithDiffDetection)
+    const mergeSources = [
+      property.propValue.get(),
+      property.overrides.ruleValue.get(),
+      property.overrides.userValue.get()
+    ]
 
-    console.log("buildValuesEditor", merged, overrides)
-    buildValuesEditor(treeNodes, merged, null)
-    // buildValuesEditor(treeNodes, internals, null)
+    mergeSources.forEach(src => {
+      if(src.hasOwnProperty("extends"))
+        mergeExtends(merged, src["extends"])
+    })
 
-    // now handle all property additionals
-    // buildValuesEditor(treeNodes, property.additional, null)
+    mergeSources.forEach(src => {
+      lodash.mergeWith(merged, src, mergeCallbackWithDiffDetection)
+    })
 
-
+    // console.log("buildValuesEditor", merged, this.overrides)
+    this.buildAttributesEditor(treeNodes, merged, null)
     this.treeNodes = [...treeNodes]
+    console.log("buildValuesEditor", treeNodes)
   }
 
+  async fetchExtendsOptions() {
+    const result = await Database.queryDb("customer", 
+    `
+      select concat_ws('.', pt.name, p.name) as name, p.id as value, pt.name as category from properties p
+        left join properties_types pt on pt.id=p.properties_types_id
+      WHERE true                
+        and p.properties_types_id in(11,12,13)
+      #limit 1
+    `)
+    console.log("extendsOptions", result)
+    return result as Option[]    
+  }
   async ngOnInit() {
     this.typeEntities = {
       default: {
         extends: {
           type: "array",
           componentType: "multiselect",
+          showFilter: true,
           // role: Role.Admin,
-          options: await Database.queryDb("customer", 
-            `
-              select name, id as value from properties p
-              WHERE p.id in(SELECT min(id) from properties 
-              group by concat_ws('/', name, properties_types_id, properties_groups_id))
-            `)
-
+          //@TODO multiselect bug does not show last line so to fix it for the moment just add an unused line
+          options: await (await this.fetchExtendsOptions())
+            .concat([{name: "none", value: "none"}])
         },
+        xextends: {
+          type: "array",
+          componentType: "multiselect-cupalabs",
+          showFilter: true,
+          settings: {
+            primaryKey: 'value',
+            labelKey: 'name',
+            singleSelection: false,
+            enableSearchFilter: true,
+            groupBy: "category",
+            badgeShowLimit: 5
+          },
+          // role: Role.Admin,
+          //@TODO multiselect bug does not show last line so to fix it for the moment just add an unused line
+          options: await (await this.fetchExtendsOptions())
+        },        
         entity: {
           type: "string",
           role: Role.Admin
@@ -347,7 +421,10 @@ export class PropertiesEditorComponent implements OnInit {
         },     
         validator: {
           type: "object"
-        },  
+        },
+        "validator.period": {
+            type: "string"
+        },
         activationDelay: {
           type: "number",
           componentType: "select",
@@ -361,6 +438,31 @@ export class PropertiesEditorComponent implements OnInit {
           description: "sets the activation delay in minutes!"
         },
 
+      },
+      periodicLimit: {
+        validator: {
+          type: "object",
+          children: {
+            period: {
+              type: "string"
+            },
+            value: {
+              type: "number"
+            }
+          }
+        },
+        xperiod: {
+          type: "string",
+          componentType: "multiselect",
+          options: [
+            { name: '1 Day', value: "1d" },
+            { name: '1 Week', value: "7d" },
+            { name: '1 Month', value: "1m" },
+            { name: 'CalendarMonth', value: "1M" }
+          ],
+          defaultValue: "1d",
+          description: "select period for this property"
+        },
       },
       limits: {
         disableWhenValue0: {
@@ -395,7 +497,9 @@ export class PropertiesEditorComponent implements OnInit {
             "select name, value from maps where `group`='notifications.targets'")
         },
         changeType: {
-          type: "number"
+          type: "number",
+          min: 0,
+          max: 2
         }
       }
     

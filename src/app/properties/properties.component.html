@@ -1,21 +1,95 @@
- 
- <div>
- <p-tree 
+ <!-- 
+     @TODO try to use treetable instead of tree but got some troubles with filter box
+     reason is that i want to use overall treetable to have always the same features
+ -->
+ <!-- <div>
+    <p-treeTable #tt
+        [value]="properties" 
+        [columns]="propertiesCols"
+        [(selection)]="selectedProperties"
+        filterMode="lenient"
+        [contextMenu]="propertiesContextMenu"
+        selectionMode="single"
+        [style]="{width: '100%'}"
+        (onNodeSelect)="onNodeSelect($event)"
+        scrollHeight="propetiesScrollHeight"
+        (onNodeContextMenuSelect)="openContextMenu($event)"        
+    >
+        <ng-template pTemplate="header" let-columns>
+            <tr>
+                <th *ngFor="let col of propertiesCols">
+                    {{col.header}}
+                </th>
+            </tr>
+            <tr>
+                <td>
+                <div class="ui-tree ui-treetable-filter-container ng-star-inserted">
+                    <input autocomplete="off" 
+                        class="ui-tree-filter ui-inputtext ui-widget ui-state-default ui-corner-all" 
+                        type="text">
+                    <span class="ui-tree-filter-icon pi pi-search"></span></div>                
+                </td>
+            </tr>
+        </ng-template>        
+     
+        <ng-template pTemplate="body" let-rowNode let-rowData="rowData">
+            <tr [ttSelectableRow]="rowNode">
+                <td *ngFor="let col of propertiesCols; let i = index">            
+                    <ng-container *ngIf="!rowData">                        
+                        <p-treeTableToggler *ngIf="i==0" [rowNode]="rowNode"></p-treeTableToggler>
+                        <div [ngClass] = "['modification_' + (rowData.property ? rowData.property.modification : 0)]">
+                        <p-triStateCheckbox 
+                            *ngIf="i==0" 
+                            (onChange)="clickAppliedChange($event, node)" 
+                            [(ngModel)]="rowData.applied"
+                            [disabled]="rowData.readonly"
+                        ></p-triStateCheckbox >
+                        {{rowNode.node.label}}
+                        </div>
+                    </ng-container>
+                    <ng-container *ngIf="rowData">
+                        <p-treeTableToggler [rowNode]="rowNode" *ngIf="i == 0"></p-treeTableToggler>
+                        <p-triStateCheckbox 
+                            *ngIf="i==0" 
+                            (onChange)="clickAppliedChange($event, node)" 
+                            [(ngModel)]="rowData.applied"
+                            [disabled]="rowData.readonly"
+                        ></p-triStateCheckbox >                        
+                        {{rowNode.node.label}}
+                    </ng-container>
+                </td>
+            </tr>
+        </ng-template>
+    </p-treeTable>   
+</div> -->
+
+<div>
+ <p-tree
+    #propertiesTreeComponent
     [value]="properties" 
     [(selection)]="selectedProperties"
+    [filter]="true" filterMode="lenient"
     [contextMenu]="propertiesContextMenu"
     selectionMode="single"
-    [style]="{width: '100%', height:'400px'}"
+    [style]="{width: '100%'}"
     (onNodeSelect)="onNodeSelect($event)"
+    scrollHeight="propetiesScrollHeight"
     (onNodeContextMenuSelect)="openContextMenu($event)">
     <ng-template let-node  pTemplate="default">
         <ng-container *ngIf="node.data">
-            <p-checkbox *ngIf="applyable" (onChange)="clickAppliedChange(node.data)" [(ngModel)]="node.data.applied" binary="true"></p-checkbox>
+            <div [ngClass] = "['modification_' + (node.data.property ? node.data.property.modification : 0)]">
+            <p-triStateCheckbox 
+                *ngIf="mode==='rulebased'"
+                (onChange)="clickAppliedChange($event, node)" 
+                [(ngModel)]="node.data.applied"
+                [disabled]="node.data.readonly"
+            ></p-triStateCheckbox >
             {{node.label}}
+            </div>
         </ng-container>
         <ng-container *ngIf="!node.data">
             {{node.label}}
-        </ng-container>        
+        </ng-container>
     </ng-template>
 </p-tree>
 

@@ -39,7 +39,7 @@ export class ConfigService {
             fs.writeFileSync(this.configPath, '{}')
             f = fs.readFileSync(this.configPath);
         }
-        console.log(f.toString())
+        // console.log(f.toString())
         this.config = JSON.parse(f.toString())
     }
 
@@ -85,7 +85,7 @@ export class ConfigService {
     }
 
     writeJson(name: string, json: object) {
-        console.log('writeJson', JSON.stringify(json, null, 2))
+        // console.log('writeJson', JSON.stringify(json, null, 2))
         this.config[name] = json
         this.saveConfig()
     }

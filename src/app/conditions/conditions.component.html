@@ -1,5 +1,50 @@
-<query-builder [(ngModel)]='query' [config]='config'>
-  <ng-container *queryInput="let rule; type: 'test'">
-    <!--<custom-datepicker [(ngModel)]="rule.value"></custom-datepicker>-->
-  </ng-container>
+<!--<app-query-builder [query]='query' (queryChange)="this.query=$event" [config]='config'></app-query-builder>-->
+<query-builder #queryBuilder [(ngModel)]='query' [config]='config' 
+onChangeCallback
+    [classNames]='classNames'>
+    <!-- <ng-container *queryEntity="let rule; let fields=entities;">
+        <p-dropdown
+            (onChange)="onChangeEntity(rule, $event)"
+            [(ngModel)]="rule.selectedEntity" 
+            [options]="fields" 
+
+            optionLabel="name"
+            placeholder="Choose"
+        ></p-dropdown>        
+    </ng-container>
+    
+    <ng-container *queryField="let rule; let fields=fields; let getFields=getFields; let changeField=changeField">
+    
+        <p-dropdown
+            (onChange)="onChangeField(rule, $event)"
+            [(ngModel)]="rule.selectedField" 
+            [options]="fields|filterByEntity:rule.entity" 
+
+            optionLabel="name"
+            placeholder="Choose"
+        ></p-dropdown>        
+    </ng-container>
+    <ng-container *queryOperator="let rule; let operators=operators">
+        <p-dropdown
+            (onChange)="onChangeOperator(rule, event)"
+            [(ngModel)]="rule.selectedOperator" 
+            [options]="operators" 
+
+            optionLabel="name"
+            placeholder="Choose"
+        ></p-dropdown>        
+
+    </ng-container>
+    
+    <ng-container *queryInput="let rule; let field=field; let options=options; type: 'multiselect'">
+        <p-multiSelect
+            [options]="options"       
+            optionLabel="name"    
+            [(ngModel)]="rule.value"
+            [filter] = "false"
+            [showToggleAll] = "false"
+            [showHeader] = "false"
+            placeholder="Select"
+        ></p-multiSelect>
+    </ng-container>     -->
 </query-builder>

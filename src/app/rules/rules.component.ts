@@ -1,6 +1,6 @@
 import { AppComponent } from '../app.component';
-import { Component, OnInit, ViewChild, Input, ChangeDetectorRef, DoBootstrap, ChangeDetectionStrategy, HostListener, ElementRef, forwardRef, ContentChild, ComponentRef } from '@angular/core'
-import { PropertiesService, Rule, Condition } from '../services/properties.service'
+import { Component, OnInit, ViewChild, Input, ChangeDetectorRef, DoBootstrap, ChangeDetectionStrategy, HostListener, ElementRef, forwardRef, ContentChild, ComponentRef, ViewEncapsulation } from '@angular/core'
+import { PropertiesService, Rule, Modification} from '../services/properties.service'
 import { DialogService, Tree, Dialog } from 'primeng/primeng'
 import { MenuItem } from 'primeng/components/common/menuitem'
 import {TreeNode, TreeDragDropService} from 'primeng/api'
@@ -17,6 +17,8 @@ import { DlgAddruleComponent } from './dlg-addrule/dlg-addrule.component';
 import { ConditionsComponent } from '../conditions/conditions.component';
 import { MessageService } from '../services/message.service';
 import { Transform } from '../lib/transform';
+import { hklib } from '../lib/hklib';
+import * as _ from 'lodash';
 
 @Component({
     selector: 'app-input',
@@ -26,7 +28,8 @@ import { Transform } from '../lib/transform';
             (click)="onHandleEditField($event)"
             (keydown.esc)="onHandleEditField($event)"
         ></div>    
-    `
+    `,
+    encapsulation: ViewEncapsulation.None,
 })
 export class InputHandler {
     static handlers: Map<any, InputHandler> = new Map    
@@ -35,14 +38,6 @@ export class InputHandler {
     @HostListener('window:keyup', ['$event'])
     keyEvent(event: KeyboardEvent) {
       console.log(event);
-      
-    //   if (event.keyCode === KEY_CODE.RIGHT_ARROW) {
-    //     this.increment();
-    //   }
-  
-    //   if (event.keyCode === KEY_CODE.LEFT_ARROW) {
-    //     this.decrement();
-    //   }
     }
 
     onHandleEditField($event) {
@@ -122,7 +117,7 @@ export class RulesComponent implements OnInit {
     contextMenuItems: MenuItem[]
 
     rules: TreeNode[];
-    selectedRules: TreeNode[] = [];
+    selectedRules: TreeNode;
 
     constructor(
         private messageService: MessageService
@@ -154,8 +149,7 @@ export class RulesComponent implements OnInit {
 
     removeRule(node: TreeNode) {
         console.log("removeRule", node)
-
-        node.parent.children.splice(node.parent.children.indexOf(node), 1)
+        this.propertiesService.removeRule(node.data)
     }
 
     
@@ -169,7 +163,7 @@ export class RulesComponent implements OnInit {
 
     onNodeSelect($event) {
         console.log("onNodeSelect", $event.node)
-        const rule = this.selectedRules[0].data as Rule
+        const rule = this.selectedRules.data as Rule
         this.propertiesService.selectRule(rule)
     }
 
@@ -180,12 +174,10 @@ export class RulesComponent implements OnInit {
             this.addRule(node, {
                 name: params.groupName,
                 description: params.description,
-                inheritFromParent: params.inheritFromParent
+                inheritFromParent: params.inheritFromParent,
+                space: this.propertiesService.getSelectedSpace(),
+                modification: Modification.Added
             })
-            // node.data as Rule
-            // rule = rule.addRule(params.groupName)
-            // rule.inheritFromParent = params.inheritFromParent
-            // this.addRule(node, rule)
         }
     }
 
@@ -201,28 +193,52 @@ export class RulesComponent implements OnInit {
             },
             { 
                 label: 'Remove Rule', 
+                disabled: !$event.node.selectable,
                 command: (event) => this.removeRule($event.node) },
         ]
     }
 
     buildRulesTree() {
         this.propertiesService.getRules().then(rules => {
-            console.log("getRules returned", rules)
+            let firstSelectableNode: TreeNode
+            console.log("getRules returned", _.cloneDeep(rules), rules)
             this.rules = []
-            Transform.tree(this.rules, rules, {
+            hklib.toTree(this.rules, rules, {
+                groupBySeperator: ".", 
+                groupBy: ["space.name", "name"],
+                labelNameField: "label",
                 apply: (to, from) => {
-                    to.label = from.name
-                    to.data = from
+                    // console.log("apply", to, from)
+                    // when we have an id then it is a data node      
+                    to.expanded = true               
+                    to.selectable = from !== undefined
+                    if(!firstSelectableNode && to.selectable) {
+                        //@TODO expand only the selected wont work
+                        hklib.forEachUp(to, node => node.expanded = true)
+                        // to.expanded = true
+                        
+                        firstSelectableNode = to
+                    }
                 }
             })
-            this.selectedRules.push(this.rules[0])
-            this.propertiesService.selectRule(this.rules[0].data)    
+            // const firstSelectableNode = this.rules.find(r => r.selectable)
+            console.log("firstSelectableNode", firstSelectableNode)
+            if(firstSelectableNode) {
+                this.selectedRules = firstSelectableNode
+                this.propertiesService.selectRule(firstSelectableNode.data)
+            }
         })        
     }
 
     ngOnInit(): void {
         console.log("onInit")
-        this.buildRulesTree()
+        this.propertiesService.loadRules().then(() => {
+            this.buildRulesTree()
+        })
+        this.propertiesService.watchRulesReload.subscribe(o => {
+            console.log("rules reload detected")
+            this.buildRulesTree()
+        })
         
     }
 }

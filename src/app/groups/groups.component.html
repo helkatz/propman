@@ -7,5 +7,8 @@
     [styleClass]="tree-key"
     (onNodeSelect)="onNodeSelect($event)"
     (onNodeContextMenuSelect)="openContextMenu($event)">
-</p-tree>    
+</p-tree>
+<p-checkbox label="inherit" *ngIf="selectedGroups.length>0" 
+    [(ngModel)]="selectedGroups[0].data.inheritFromParent" binary="true"
+    (onChange)="onInheritClick($event)"></p-checkbox>    
 

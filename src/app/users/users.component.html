@@ -1,0 +1,23 @@
+<div>
+<p-dropdown 
+    [style]="{'width':'100%'}"
+    [options]="users" 
+    [virtualScroll]="true" itemSize="30"
+    [(ngModel)]="selectedUser" 
+    (onChange)="onDropdownUserChange($event)" 
+    [filter]="true"
+    placeholder="Select a User">
+    <ng-template let-user pTemplate="selectedItem">
+        {{user.value.id}}&nbsp;{{user.value.firstName}}&nbsp;{{user.value.lastName}}
+    </ng-template>   
+    <ng-template let-user pTemplate="item">
+        <div class="p-grid item">
+            <div class="p-col-3">{{user.value.id}}</div>
+            <div class="p-col-9">
+                {{user.value.firstName}}&nbsp;{{user.value.lastName}}
+            </div>
+            <!-- <div class="ui-g-8">{{user.value.firstName}}</div> -->
+        </div>
+    </ng-template>      
+</p-dropdown>
+</div>

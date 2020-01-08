@@ -12,21 +12,24 @@
             <td *ngFor="let col of cols; let i = index" pTooltip={{rowData.meta.description}} 
                 tooltipPosition="top">
                 <p-treeTableToggler [rowNode]="rowNode" *ngIf="i == 0"></p-treeTableToggler>
-                <span *ngIf="i !== 0" class="ui-grid ui-grid-responsive ui-fluid"> 
+                <span *ngIf="i !== 0" class="ui-grid ui-grid-responsive ui-fluid"
+                    [ngClass] = "['modification_' + rowData.property.modification]">                
                     <div class="ui-grid-row">                   
-                        <span *ngIf="rowData.meta.componentType=='boolean'" class="ui-grid-col-12">
-                            <p-checkbox styleClass="component" [(ngModel)]="rowData.value" binary="true"
-                                (onChange)="onVarValueChanged(rowData)"></p-checkbox>
-                        </span>
-                        <div *ngIf="rowData.meta.componentType=='string'" class="ui-grid-col-12">
-                            <input type="text" class="component" pInputText value="rowData.value" 
+                        <span [ngSwitch]="rowData.meta.componentType" class="ui-grid-col-12">
+                            <p-checkbox 
+                                *ngSwitchCase="'boolean'"
+                                [(ngModel)]="rowData.value" binary="true"
+                                (onChange)="onVarValueChanged(rowData)">
+                            </p-checkbox>
+                            <input *ngSwitchCase="'string'"
+                                type="text" class="component" pInputText value="rowData.value" 
                                 [(ngModel)]="rowData.value" (input)="onVarValueChanged(rowData)">
-                        </div>
-                        <span *ngIf="rowData.meta.componentType=='number'" class="ui-grid-col-12">
-                            <input type="text" class="component" pInputText [(ngModel)]="rowData.value" (input)="onVarValueChanged(rowData)">
-                        </span>
-                        <span *ngIf="rowData.meta.componentType=='select'" class="ui-grid-col-12">
+                            <p-spinner *ngSwitchCase="'number'"
+                                [(ngModel)]="rowData.value" 
+                                [min]="rowData.meta.min" [max]="rowData.meta.max">
+                            </p-spinner>
                             <p-dropdown
+                                *ngSwitchCase="'select'"
                                 (onChange)="onDropdownValuesChange(rowData)" 
                                 [(ngModel)]="rowData.selectedOptions" 
                                 [options]="rowData.meta.options" 
@@ -34,27 +37,55 @@
                                 optionLabel="name"
                             >
                             </p-dropdown>
-                        </span>
-                        <span *ngIf="rowData.meta.componentType=='multiselect'" class="ui-grid-col-12">
-                            <!--{{log("rule multiselect", rule)}}-->
                             <p-multiSelect
+                                *ngSwitchCase="'multiselect'"
                                 (onChange)="onMultiSelectValuesChange(rowData)" 
                                 [options]="rowData.meta.options"       
                                 optionLabel="name"    
                                 [(ngModel)]="rowData.selectedOptions"
-                                [filter] = "false"
+                                [filter] = "rowData.meta.showFilter"
                                 [showToggleAll] = "false"
                                 [showHeader] = "false"
-                                placeholder="Select"
-                                ></p-multiSelect>
+                            >
+                                <ng-template let-selectedItems pTemplate="selectedItems">
+                                    <span *ngFor="let item of selectedItems">{{item.name}}</span>
+                                </ng-template>
+                                <ng-template let-item let-i="index" pTemplate="item">
+                                    <!-- {{log(item)}} -->
+                                    <div style="font-size:14px;float:right;margin-top:4px">{{item.value.name}}</div>
+                                </ng-template>                            
+                            </p-multiSelect>
+                            <p-tree
+                                *ngSwitchCase="'tree'"
+                                [value]="rowData.meta.options" 
+                                [(selection)]="rowData.selectedOptions"
+                                selectionMode="checkbox"
+                                [style]="{width: '100%'}"
+                                (onNodeSelect)="onMultiSelectValuesChange(rowData)"
+                            >
+                            </p-tree>
+                            <angular2-multiselect 
+                                *ngSwitchCase="'multiselect-cupalabs'"
+                                [data]="rowData.meta.options" 
+                                [(ngModel)]="rowData.selectedOptions" 
+                                [settings]="rowData.meta.settings" 
+                            >
+                                <!-- <c-item>
+                                    <ng-template let-item="item">
+                                        {{item.id + item.name}}
+                                    </ng-template>
+                                </c-item>                                    -->
+                            </angular2-multiselect>                            
+                        </span>
+                        <span *ngFor="let overided of rowData.overidedBy">
+                            <span matBadge={{overided}} 
+                                matBadgePosition="before" matBadgeColor="accent" MatBadgeSize="small">
+                            </span>
                         </span>
                     </div>
                 </span>
                 <span *ngIf="i == 0">
-                    <span 
-                        [ngClass]="[
-                            rowData.isOverride ? 'override' : ''
-                        ]">
+                    <span>
                         {{rowData.name}}
                     </span>
                 </span>

@@ -1,9 +1,9 @@
 import { Component, ComponentRef, Injector, OnInit, ViewContainerRef, ViewChild
-  , ComponentFactoryResolver, Type, Input, NgModule, Query } from '@angular/core';
+  , ComponentFactoryResolver, Type, Input, NgModule, Query, Pipe, PipeTransform } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { jqxComboBoxModule }   from 'jqwidgets-ng/jqxcombobox';
-import { QueryBuilderModule, QueryBuilderConfig, RuleSet} from "angular2-query-builder";
-import { PropertiesService } from '../services/properties.service';
+import * as qb from "angular2-query-builder";
+import { PropertiesService, Rule } from '../services/properties.service';
 import { CheckboxModule, MultiSelectModule, DropdownModule, ButtonModule, InputTextModule } from 'primeng/primeng';
 import { ValueConverter } from '@angular/compiler/src/render3/view/template';
 import { MatSelectModule, MatButtonModule } from '@angular/material';
@@ -23,56 +23,31 @@ interface Filter {
 @Component({
   selector: 'app-conditions',
   templateUrl: './conditions.component.html',
+  styleUrls: ['./conditions.component.scss'],
   providers: []
 })
 
 
 export class ConditionsComponent implements OnInit {
-  query: RuleSet;
+  query: qb.RuleSet;
   selected: string
-  config: QueryBuilderConfig
+  config: qb.QueryBuilderConfig
+  classNames: qb.QueryBuilderClassNames = {
+    treeContainer: "tree-container"
+  }
+  @ViewChild("queryBuilder", {static: false}) queryBuilder: qb.QueryBuilderComponent
 
   constructor(private propertiesService: PropertiesService) {
-
   }
-
-  toObjects(from) {
-    if(from instanceof String || from instanceof Number) {
-      return [{
-        name: from,
-        value: from
-      }]
-    }
-    return from.map(o => {
-      if(o instanceof Object)
-        return o;
-      else {
-        return {
-          name: o,
-          value: o
-        }        
-      }  
-    })
-  }
-  transformOperators(operators) {
-    return operators.map(o => {
-      return {
-        value: o,
-        name: o
-      }
-    })
-  }
-  print(msg) {
+  log(...msg: any[]) {
     console.log(msg)
-  }
-
-  loadQuery(query: RuleSet) {
-    console.log(query)
-    this.query = {...query}
   }
 
   async addFilters() {
 
+    this.config = {
+      entities: {}, fields: {}
+    }
     this.config = {
       entities: {
         Simple: {
@@ -125,42 +100,112 @@ export class ConditionsComponent implements OnInit {
             "select concat(id, ' ', name) as name, id from jurisdictions")
         }, 
         IsTemporaryAccount: {name: 'IsTemporaryAccount', type: 'boolean'},
-        IdChecked: {name: 'IdChecked', type: 'boolean'},
-        PaymentData: {name: 'PaymentData', type: 'boolean'},
+        HasIdChecked: {
+          entity: 'simple',
+          name: 'IdChecked', 
+          type: 'boolean'
+        },
+        HasPaymentData: {
+          entity: 'simple',
+          name: 'PaymentData', 
+          type: 'boolean'
+        },
       }
     }
 
     const juriSettings = await Database.queryDb("customer", 
             "select name, ID from jurisdictions_settingtypes")
     juriSettings.forEach(res => {
-      console.log(res)
+      // console.log(res)
       this.config.fields[res.name] = {
         entity: 'jurisdictionSettings',
         name: res.name,
         type: 'number'
       }
     })
+
+    const settings = await Database.queryDb("customer", 
+            "select c_tag name, i_settings id from settings")
+    settings.forEach(res => {
+      // console.log(res)
+      this.config.fields[res.name] = {
+        entity: 'userSettings',
+        name: res.name,
+        type: 'number'
+      }
+    })
+
     this.config = {...this.config}
-    console.log(this.config.fields)
+    // console.log(this.config.fields)
     // this.config = {...this.config}
   }
+
+  onChangeEntity(rule: qb.Rule, event) {
+    console.log("onChangeEntity", rule, event)
+    rule.entity = event.value.value
+  }
+  
+  onChangeField(rule: qb.Rule, event) {
+    console.log("onChangeField", rule, event)
+    rule.field = event.value.value
+    // this.queryBuilder.getOperators()    
+  }
+  
+  onChangeOperator(rule: qb.Rule, event) {
+    console.log("onChangeOperator", rule, event)
+    rule.operator = event.value.value
+  }
+
+  selectConditions(rule: Rule) {
+    if(!rule) return
+    const iterateRuleset = (ruleset: qb.RuleSet) => {
+      rule.query.get().rules.forEach(r => {
+        if(rule['condition'] !== undefined) {
+          iterateRuleset(r as qb.RuleSet)
+        } else {
+          const rule = r as qb.Rule
+          console.log("rule", rule)
+          delete rule['selectedEntity']
+          delete rule['selectedField']
+        }
+      })
+    }
+    // iterateRuleset(rule.query.get())
+    this.query = rule.query.get()
+
+  }
+
   async ngOnInit() {
+    console.log("onInit", this)
+
     await this.addFilters()
+    this.selectConditions(this.propertiesService.getSelectedRule())
     this.propertiesService.watchRules.subscribe(rule => {
-      this.query = rule.query
-      // this.loadQuery(rule.query)
+      this.selectConditions(rule)
     })
   }
 }
 
+@Pipe({
+  name: 'filterByEntity',
+  pure: true
+})
+
+export class FilterByEntityPipe implements PipeTransform {
+  transform(items: qb.Field[], entity: string): any {
+      // console.log(items, term)
+      return items.filter(item => item.entity == entity);
+  }
+}
 
 @NgModule({
   imports: [
     BrowserModule, 
-    jqxComboBoxModule, QueryBuilderModule, FormsModule, ReactiveFormsModule
+    jqxComboBoxModule, qb.QueryBuilderModule, FormsModule, ReactiveFormsModule
     , CheckboxModule, MultiSelectModule, DropdownModule, ButtonModule, InputTextModule
     , MatButtonModule, MatSelectModule, MatFormFieldModule],
-  declarations: [ConditionsComponent, MyQueryBuilderComponent, RulesetComponent, RuleComponent],
+  declarations: [ConditionsComponent, MyQueryBuilderComponent
+    , RulesetComponent, RuleComponent, FilterByEntityPipe],
   exports: [ConditionsComponent]
 })
 export class ConditionsModule {

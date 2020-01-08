@@ -18,11 +18,19 @@
 <p-tree #rulesTree [value]="rules" 
     [(selection)]="selectedRules"
     [contextMenu]="rulesContextMenu"
-    selectionMode="multiple"
+    selectionMode="single"
     [style]="{width: '100%'}"
     [styleClass]="tree-key"
     (onNodeSelect)="onNodeSelect($event)"
     (onNodeContextMenuSelect)="openContextMenu($event)">
+    <ng-template let-node  pTemplate="default">
+        <ng-container *ngIf="node.data">
+            <div [ngClass] = "['modification_' + node.data.modification]">{{node.label}}</div>
+        </ng-container>
+        <ng-container *ngIf="!node.data">
+            {{node.label}}
+        </ng-container>
+    </ng-template>    
 </p-tree>
 
 <!--

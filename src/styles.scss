@@ -1,7 +1,24 @@
 /* You can add global styles to this file, and also import other style files */
+@import '~@angular/material/prebuilt-themes/deeppurple-amber.css';
+
 html, body {
   margin: 0;
   padding: 0;
 
   height: 100%;
+}
+// .modification_0 {
+//   background-color: white !important;
+// }
+
+.modification_1 {
+  background-color:lightcyan !important
+}
+
+.modification_2 {
+  background-color:lightcoral !important
+}
+
+.modification_3 {
+  background-color:lightgreen !important
 }

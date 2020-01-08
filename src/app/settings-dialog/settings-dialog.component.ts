@@ -97,12 +97,14 @@ export class HostConfigurationTab implements OnInit {
 export class GenerellConfigurationTab implements OnInit {
 
     themes: SelectItem[] = [
-        { value: 'bootsrap' }, { value: 'cruze' }, { value: 'cupertino' }, { value: 'darkness' }
-        , { value: 'flick' }, { value: 'home' }, { value: 'kasper' }, { value: 'lightness' }
-        , { value: 'ludvig' }, { value: 'luna-amber' }, { value: 'luna-blue' }, { value: 'luna-green' }
-        , { value: 'luna-pink' }, { value: 'nova-colored' }, { value: 'nova-dark' }, { value: 'nova-light' }
-        , { value: 'omega' }, { value: 'pepper-grinder' }, { value: 'redmond' }, { value: 'rhea' }, { value: 'rocket' }
-        , { value: 'south-street' }, { value: 'start' }, { value: 'trontastic' }, { value: 'voclain' }
+        { value: 'luna-amber' }, { value: 'luna-blue' }, { value: 'luna-green' }, { value: 'luna-pink' }
+        , { value: 'nova-colored' }, { value: 'nova-dark' }, { value: 'nova-light' }, { value: 'rhea' }      
+        // { value: 'bootsrap' }, { value: 'cruze' }, { value: 'cupertino' }, { value: 'darkness' }
+        // , { value: 'flick' }, { value: 'home' }, { value: 'kasper' }, { value: 'lightness' }
+        // , { value: 'ludvig' }, { value: 'luna-amber' }, { value: 'luna-blue' }, { value: 'luna-green' }
+        // , { value: 'luna-pink' }, { value: 'nova-colored' }, { value: 'nova-dark' }, { value: 'nova-light' }
+        // , { value: 'omega' }, { value: 'pepper-grinder' }, { value: 'redmond' }, { value: 'rhea' }, { value: 'rocket' }
+        // , { value: 'south-street' }, { value: 'start' }, { value: 'trontastic' }, { value: 'voclain' }
     ]
 
     selectedTheme: SelectItem

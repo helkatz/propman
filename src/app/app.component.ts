@@ -28,7 +28,9 @@ export class AppComponent implements OnInit  {
     messages: []
     // theme = "omega"
     themeUrl: any
-sliderPos: number
+    sliderPos: number
+
+    show: "properties-rulebased" | "properties-userbased" | "properties" | "history"
     constructor(
         private configService: ConfigService
         , private propertiesService: PropertiesService
@@ -102,12 +104,35 @@ sliderPos: number
 
         this.menuItems = [
             {
-                label: 'Settings',
-                command: event => { this.openSettings() },
+                icon: "fa fa-fw fa-list",
+                items: [
+                    {
+                        label: 'Settings',
+                        command: event => { this.openSettings() },
+                    },
+                    {
+                        label: 'Open DevTools',
+                        command: event => remote.getCurrentWindow().webContents.openDevTools()
+                    }                    
+                ]
             },
             {
-                label: 'Open DevTools',
-                command: event => remote.getCurrentWindow().webContents.openDevTools()
+                label: 'Properties',
+                command: event => this.show = "properties",
+                items: [
+                        {
+                            label: 'Rule based',
+                            command: event => this.show = "properties-rulebased"
+                        },
+                        {
+                            label: 'User based',
+                            command: event => this.show = "properties-userbased"
+                        },                        
+                        {
+                            label: 'History',
+                            command: event => this.show = "history"
+                        }
+                    ]
             }
 
         ];

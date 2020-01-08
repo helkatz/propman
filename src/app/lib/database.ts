@@ -80,7 +80,7 @@ interface TableChanges {
     dataLength: number
 }
 
-class Session
+export class Session
 {
     static lastChanges: Map<string, TableChanges> = new Map
 
@@ -89,7 +89,7 @@ class Session
         //console.log("pool = ", this.pool)
     }
     queryxx(sql: string, values: any): Promise<Result> {
-        if(sql.match('^[ \t\n]*(insert|update|delete)'))
+        if(sql.match(new RegExp('^[ \t\n]*(insert|update|delete)', "i")))
             console.log("query %s", sql, values)
         return new Promise((resolve, reject) => {
             let data = this.pool.query(sql, values, async (error, results, fields) => {                
@@ -179,7 +179,7 @@ const databases = {
         }
     }
 }
-class Database
+export class Database
 {    
     private static pools_: Map<string, mysql.Pool>
     static Initialize() {
@@ -270,4 +270,4 @@ interface IFieldMap {
 //     return ret
 // }
 Database.Initialize()
-export {Database, Session};
+// export {Database, Session};

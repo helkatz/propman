@@ -1,9 +1,9 @@
 import { AppComponent } from '../app.component';
-import { Component, OnInit, ViewChild, Input, ChangeDetectorRef, DoBootstrap, ChangeDetectionStrategy, HostListener } from '@angular/core'
+import { Component, OnInit, ViewChild, Input, ChangeDetectorRef, DoBootstrap, ChangeDetectionStrategy, HostListener, OnDestroy } from '@angular/core'
 import { DialogService } from 'primeng/primeng'
 import { MenuItem } from 'primeng/components/common/menuitem'
 import {TreeNode, SelectItem} from 'primeng/api'
-import { forkJoin, Observable } from 'rxjs'
+import { forkJoin, Observable, Subscription } from 'rxjs'
 import { ConfigService, Environment } from '../services/config.service'
 import { EnvironChooserComponent, EnvironChooserService } from '../environ-chooser/environ-chooser.component'
 import { Utils, Breakable } from '../lib/helper'
@@ -13,6 +13,7 @@ import { Rule, PropertiesService, Group, Property } from '../services/properties
 import { Transform } from '../lib/transform';
 import { PropertiesComponent } from '../properties/properties.component';
 import { MessageService } from '../services/message.service';
+import { hklib } from '../lib/hklib';
 
 
 @Component({
@@ -22,53 +23,47 @@ import { MessageService } from '../services/message.service';
     providers: [MessageService, DialogService, ConfigService, EnvironChooserService],
 })
 
-export class GroupsComponent implements OnInit {
-
+export class GroupsComponent implements OnInit, OnDestroy {
+    subscriptions: Subscription[] = []
     contextMenuItems: MenuItem[]
 
     groups: TreeNode[] = [];
     selectedGroups: TreeNode[] = [];
-
+    
     constructor(
         private propertiesService: PropertiesService
         ) {
-            console.log("constructor")
-            this.propertiesService.watchRules.subscribe(rule => {
+            this.subscriptions.push(this.propertiesService.watchRules.subscribe(rule => {
                 console.log("rule change detected", rule)
-                this.loadGroups(rule.groups)
-            })
+                this.buildGroupsTree(rule ? rule.groups : [])
+            }))
     
     }
 
-    loadGroups(groups: Group[]) {
-        console.log('load groups', groups)
-        this.groups = Transform.tree([], groups, {
-            apply: (to, from) => {
-                to.label = from.name
-                to.data = from
-            }
-        })
-        console.log(this.groups)
-        // this.groups = [...groups]
-        // const mergedGroups = [...groups, this.propertiesService.getAvailableGroups()]
-        // Transform.tree(this.groups, mergedGroups)
-        // // console.log('load groups', groups, this.groups)
-        // this.groups = [...this.groups]
-        console.log("now selected", this.selectedGroups)
-        this.selectGroup()
+    private buildGroupsTree(groups: Group[]) {
+        this.selectedGroups = []
+        console.log('buildGroupsTree', groups, this.propertiesService)
+        if(!groups.length) {
+            this.groups = []
+            return
+        }
+        this.groups = hklib.toTree([], groups, { labelNameField: "label" })
+        this.selectedGroups.push(this.groups[0])
+        this.propertiesService.selectGroup(this.groups[0].data)   
     }
 
-    selectGroup() {
-        if(!this.selectedGroups.length)
-            return
+    onInheritClick(event) {
+        this.propertiesService.notifyGroupChange()
+    }
+
+    async onNodeSelect($event) {
         const group = this.selectedGroups[0]['data'] as Group
         this.propertiesService.selectGroup(group)
     }
 
-    async onNodeSelect($event) {
-        console.log("onNodeSelect", this.selectedGroups)
-        this.selectGroup();
-    }
+    ngOnDestroy(): void {
+        this.subscriptions.forEach(subsription =>  subsription.unsubscribe())
+      }
 
     ngOnInit(): void {
     }

@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { Fieldset } from 'primeng/primeng';
+import { NG_VALUE_ACCESSOR } from '@angular/forms';
 
 export type Type = "multiselect" | "select" | "string" | "number" | "boolean"
 namespace operators {
@@ -23,8 +24,8 @@ export interface Rule {
 }
 
 export interface RuleSet {
-  condition: Condition
-  rules: Array<RuleSet | Rule>
+  condition?: Condition
+  rules?: Array<RuleSet | Rule>
 }
 
 export interface Option {
@@ -56,7 +57,8 @@ export interface QueryBuilderConfig {
 @Component({
   selector: 'app-query-builder',
   templateUrl: './query-builder.component.html',
-  styleUrls: ['./query-builder.component.scss']
+  styleUrls: ['./query-builder.component.scss'],
+  providers:[    { provide: NG_VALUE_ACCESSOR, useExisting: MyQueryBuilderComponent, multi: true }]
 })
 export class MyQueryBuilderComponent implements OnInit {
 
@@ -108,7 +110,7 @@ export class MyQueryBuilderComponent implements OnInit {
   }
 
   ngOnInit() {
-    // console.log("OnInit", this)
+    console.log("OnInit", this)
   }
 
 }

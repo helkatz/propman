@@ -115,7 +115,7 @@
     "conventional-changelog-cli": "2.0.11",
     "core-js": "^2.6.5",
     "core.js": "^0.4.2",
-    "electron": "^4.1.0",
+    "electron": "^9.1.0",
     "electron-builder": "20.38.5",
     "electron-reload": "1.4.0",
     "font-awesome": "^4.7.0",
